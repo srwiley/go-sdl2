@@ -17,70 +17,73 @@ var (
 	eventWatchesCache map[EventWatchHandle]*eventFilterCallbackContext = make(map[EventWatchHandle]*eventFilterCallbackContext)
 )
 
+//EventType (https://wiki.libsdl.org/SDL_EventType)
+type EventType uint32
+
 const (
-	FIRSTEVENT              = C.SDL_FIRSTEVENT
-	QUIT                    = C.SDL_QUIT
-	APP_TERMINATING         = C.SDL_APP_TERMINATING
-	APP_LOWMEMORY           = C.SDL_APP_LOWMEMORY
-	APP_WILLENTERBACKGROUND = C.SDL_APP_WILLENTERBACKGROUND
-	APP_DIDENTERBACKGROUND  = C.SDL_APP_DIDENTERBACKGROUND
-	APP_WILLENTERFOREGROUND = C.SDL_APP_WILLENTERFOREGROUND
-	APP_DIDENTERFOREGROUND  = C.SDL_APP_DIDENTERFOREGROUND
+	FIRSTEVENT              EventType = C.SDL_FIRSTEVENT
+	QUIT                    EventType = C.SDL_QUIT
+	APP_TERMINATING         EventType = C.SDL_APP_TERMINATING
+	APP_LOWMEMORY           EventType = C.SDL_APP_LOWMEMORY
+	APP_WILLENTERBACKGROUND EventType = C.SDL_APP_WILLENTERBACKGROUND
+	APP_DIDENTERBACKGROUND  EventType = C.SDL_APP_DIDENTERBACKGROUND
+	APP_WILLENTERFOREGROUND EventType = C.SDL_APP_WILLENTERFOREGROUND
+	APP_DIDENTERFOREGROUND  EventType = C.SDL_APP_DIDENTERFOREGROUND
 
 	/* Window events */
-	WINDOWEVENT = C.SDL_WINDOWEVENT
-	SYSWMEVENT  = C.SDL_SYSWMEVENT
+	WINDOWEVENT EventType = C.SDL_WINDOWEVENT
+	SYSWMEVENT  EventType = C.SDL_SYSWMEVENT
 
 	/* Keyboard events */
-	KEYDOWN     = C.SDL_KEYDOWN
-	KEYUP       = C.SDL_KEYUP
-	TEXTEDITING = C.SDL_TEXTEDITING
-	TEXTINPUT   = C.SDL_TEXTINPUT
+	KEYDOWN     EventType = C.SDL_KEYDOWN
+	KEYUP       EventType = C.SDL_KEYUP
+	TEXTEDITING EventType = C.SDL_TEXTEDITING
+	TEXTINPUT   EventType = C.SDL_TEXTINPUT
 
 	/* Mouse events */
-	MOUSEMOTION     = C.SDL_MOUSEMOTION
-	MOUSEBUTTONDOWN = C.SDL_MOUSEBUTTONDOWN
-	MOUSEBUTTONUP   = C.SDL_MOUSEBUTTONUP
-	MOUSEWHEEL      = C.SDL_MOUSEWHEEL
+	MOUSEMOTION     EventType = C.SDL_MOUSEMOTION
+	MOUSEBUTTONDOWN EventType = C.SDL_MOUSEBUTTONDOWN
+	MOUSEBUTTONUP   EventType = C.SDL_MOUSEBUTTONUP
+	MOUSEWHEEL      EventType = C.SDL_MOUSEWHEEL
 
 	/* Joystick events */
-	JOYAXISMOTION    = C.SDL_JOYAXISMOTION
-	JOYBALLMOTION    = C.SDL_JOYBALLMOTION
-	JOYHATMOTION     = C.SDL_JOYHATMOTION
-	JOYBUTTONDOWN    = C.SDL_JOYBUTTONDOWN
-	JOYBUTTONUP      = C.SDL_JOYBUTTONUP
-	JOYDEVICEADDED   = C.SDL_JOYDEVICEADDED
-	JOYDEVICEREMOVED = C.SDL_JOYDEVICEREMOVED
+	JOYAXISMOTION    EventType = C.SDL_JOYAXISMOTION
+	JOYBALLMOTION    EventType = C.SDL_JOYBALLMOTION
+	JOYHATMOTION     EventType = C.SDL_JOYHATMOTION
+	JOYBUTTONDOWN    EventType = C.SDL_JOYBUTTONDOWN
+	JOYBUTTONUP      EventType = C.SDL_JOYBUTTONUP
+	JOYDEVICEADDED   EventType = C.SDL_JOYDEVICEADDED
+	JOYDEVICEREMOVED EventType = C.SDL_JOYDEVICEREMOVED
 
 	/* Game controller events */
-	CONTROLLERAXISMOTION     = C.SDL_CONTROLLERAXISMOTION
-	CONTROLLERBUTTONDOWN     = C.SDL_CONTROLLERBUTTONDOWN
-	CONTROLLERBUTTONUP       = C.SDL_CONTROLLERBUTTONUP
-	CONTROLLERDEVICEADDED    = C.SDL_CONTROLLERDEVICEADDED
-	CONTROLLERDEVICEREMOVED  = C.SDL_CONTROLLERDEVICEREMOVED
-	CONTROLLERDEVICEREMAPPED = C.SDL_CONTROLLERDEVICEREMAPPED
+	CONTROLLERAXISMOTION     EventType = C.SDL_CONTROLLERAXISMOTION
+	CONTROLLERBUTTONDOWN     EventType = C.SDL_CONTROLLERBUTTONDOWN
+	CONTROLLERBUTTONUP       EventType = C.SDL_CONTROLLERBUTTONUP
+	CONTROLLERDEVICEADDED    EventType = C.SDL_CONTROLLERDEVICEADDED
+	CONTROLLERDEVICEREMOVED  EventType = C.SDL_CONTROLLERDEVICEREMOVED
+	CONTROLLERDEVICEREMAPPED EventType = C.SDL_CONTROLLERDEVICEREMAPPED
 
 	/* Touch events */
-	FINGERDOWN   = C.SDL_FINGERDOWN
-	FINGERUP     = C.SDL_FINGERUP
-	FINGERMOTION = C.SDL_FINGERMOTION
+	FINGERDOWN   EventType = C.SDL_FINGERDOWN
+	FINGERUP     EventType = C.SDL_FINGERUP
+	FINGERMOTION EventType = C.SDL_FINGERMOTION
 
 	/* Gesture events */
-	DOLLARGESTURE = C.SDL_DOLLARGESTURE
-	DOLLARRECORD  = C.SDL_DOLLARRECORD
-	MULTIGESTURE  = C.SDL_MULTIGESTURE
+	DOLLARGESTURE EventType = C.SDL_DOLLARGESTURE
+	DOLLARRECORD  EventType = C.SDL_DOLLARRECORD
+	MULTIGESTURE  EventType = C.SDL_MULTIGESTURE
 
 	/* Clipboard events */
-	CLIPBOARDUPDATE = C.SDL_CLIPBOARDUPDATE
+	CLIPBOARDUPDATE EventType = C.SDL_CLIPBOARDUPDATE
 
 	/* Drag and drop events */
-	DROPFILE = C.SDL_DROPFILE
+	DROPFILE EventType = C.SDL_DROPFILE
 
 	/* Render events */
-	RENDER_TARGETS_RESET = C.SDL_RENDER_TARGETS_RESET
+	RENDER_TARGETS_RESET EventType = C.SDL_RENDER_TARGETS_RESET
 
-	USEREVENT = C.SDL_USEREVENT
-	LASTEVENT = C.SDL_LASTEVENT
+	USEREVENT EventType = C.SDL_USEREVENT
+	LASTEVENT EventType = C.SDL_LASTEVENT
 )
 
 const (
@@ -97,224 +100,223 @@ const (
 )
 
 // Event (https://wiki.libsdl.org/SDL_Event)
-type Event interface{}
+type Event interface {
+	GetType() EventType // EventType is common to all sdl events and
+	// while the prefered name for this function may be just Type()
+	// that conflicts with field name 'Type' in the struct.
+	GetTimestamp() uint32 // All declared sdl events have a timestamp
+	// but only the Type field is specified in the sdl docs for events.
+	// However, since the timestamp is common IMHO it is a good idea to
+	// expose it here also.
+}
 
 type CEvent struct {
-	Type uint32
+	Type EventType
 	_    [52]byte // padding
 }
 
+// CommonEvent struct contains data common to all sdl event types.
+// Attaching the GetType and GetTimestamp functions
+// ensures conformance to the Event interface for this as
+// well as all structs that anom enclose the CommonEvent struct.
 type CommonEvent struct {
-	Type      uint32
+	Type      EventType
 	Timestamp uint32
+}
+
+// Returns the event type
+func (ce *CommonEvent) GetType() EventType {
+	return ce.Type
+}
+
+// Returns the event timestamp
+func (ce *CommonEvent) GetTimestamp() uint32 {
+	return ce.Timestamp
 }
 
 // WindowEvent (https://wiki.libsdl.org/SDL_WindowEvent)
 type WindowEvent struct {
-	Type      uint32
-	Timestamp uint32
-	WindowID  uint32
-	Event     uint8
-	_         uint8 // padding
-	_         uint8 // padding
-	_         uint8 // padding
-	Data1     int32
-	Data2     int32
+	CommonEvent
+	WindowID uint32
+	Event    uint8
+	_        uint8 // padding
+	_        uint8 // padding
+	_        uint8 // padding
+	Data1    int32
+	Data2    int32
 }
 type cWindowEvent C.SDL_WindowEvent
 
 //TODO: Key{Up,Down}Event only differ in 'Type' - a boolean field would be enough to distinguish up/down events
+// I think this is what you want.
 
 type KeyDownEvent struct {
-	Type      uint32
-	Timestamp uint32
-	WindowID  uint32
-	State     uint8
-	Repeat    uint8
-	_         uint8 // padding
-	_         uint8 // padding
-	Keysym    Keysym
+	CommonEvent
+	WindowID uint32
+	State    uint8
+	Repeat   uint8
+	_        uint8 // padding
+	_        uint8 // padding
+	Keysym   Keysym
 }
 type cKeyboardEvent C.SDL_KeyboardEvent
 
 type KeyUpEvent struct {
-	Type      uint32
-	Timestamp uint32
-	WindowID  uint32
-	State     uint8
-	Repeat    uint8
-	_         uint8 // padding
-	_         uint8 // padding
-	Keysym    Keysym
+	KeyDownEvent
 }
 
 // TextEditingEvent (https://wiki.libsdl.org/SDL_TextEditingEvent)
 type TextEditingEvent struct {
-	Type      uint32
-	Timestamp uint32
-	WindowID  uint32
-	Text      [C.SDL_TEXTINPUTEVENT_TEXT_SIZE]byte
-	Start     int32
-	Length    int32
+	CommonEvent
+	WindowID uint32
+	Text     [C.SDL_TEXTINPUTEVENT_TEXT_SIZE]byte
+	Start    int32
+	Length   int32
 }
 type cTextEditingEvent C.SDL_TextEditingEvent
 
 // TextInputEvent (https://wiki.libsdl.org/SDL_TextInputEvent)
 type TextInputEvent struct {
-	Type      uint32
-	Timestamp uint32
-	WindowID  uint32
-	Text      [C.SDL_TEXTINPUTEVENT_TEXT_SIZE]byte
+	CommonEvent
+	WindowID uint32
+	Text     [C.SDL_TEXTINPUTEVENT_TEXT_SIZE]byte
 }
 type cTextInputEvent C.SDL_TextInputEvent
 
 // MouseMotionEvent (https://wiki.libsdl.org/SDL_MouseMotionEvent)
 type MouseMotionEvent struct {
-	Type      uint32
-	Timestamp uint32
-	WindowID  uint32
-	Which     uint32
-	State     uint32
-	X         int32
-	Y         int32
-	XRel      int32
-	YRel      int32
+	CommonEvent
+	WindowID uint32
+	Which    uint32
+	State    uint32
+	X        int32
+	Y        int32
+	XRel     int32
+	YRel     int32
 }
 type cMouseMotionEvent C.SDL_MouseMotionEvent
 
 // MouseButtonEvent (https://wiki.libsdl.org/SDL_MouseButtonEvent)
 type MouseButtonEvent struct {
-	Type      uint32
-	Timestamp uint32
-	WindowID  uint32
-	Which     uint32
-	Button    uint8
-	State     uint8
-	_         uint8 // padding
-	_         uint8 // padding
-	X         int32
-	Y         int32
+	CommonEvent
+	WindowID uint32
+	Which    uint32
+	Button   uint8
+	State    uint8
+	_        uint8 // padding
+	_        uint8 // padding
+	X        int32
+	Y        int32
 }
 type cMouseButtonEvent C.SDL_MouseButtonEvent
 
 // MouseWheelEvent (https://wiki.libsdl.org/SDL_MouseWheelEvent)
 type MouseWheelEvent struct {
-	Type      uint32
-	Timestamp uint32
-	WindowID  uint32
-	Which     uint32
-	X         int32
-	Y         int32
+	CommonEvent
+	WindowID uint32
+	Which    uint32
+	X        int32
+	Y        int32
 }
 type cMouseWheelEvent C.SDL_MouseWheelEvent
 
 // JoyAxisEvent (https://wiki.libsdl.org/SDL_JoyAxisEvent)
 type JoyAxisEvent struct {
-	Type      uint32
-	Timestamp uint32
-	Which     JoystickID
-	Axis      uint8
-	_         uint8 // padding
-	_         uint8 // padding
-	_         uint8 // padding
-	Value     int16
-	_         uint16 // padding
+	CommonEvent
+	Which JoystickID
+	Axis  uint8
+	_     uint8 // padding
+	_     uint8 // padding
+	_     uint8 // padding
+	Value int16
+	_     uint16 // padding
 }
 type cJoyAxisEvent C.SDL_JoyAxisEvent
 
 // JoyBallEvent (https://wiki.libsdl.org/SDL_JoyBallEvent)
 type JoyBallEvent struct {
-	Type      uint32
-	Timestamp uint32
-	Which     JoystickID
-	Ball      uint8
-	_         uint8 // padding
-	_         uint8 // padding
-	_         uint8 // padding
-	XRel      int16
-	YRel      int16
+	CommonEvent
+	Which JoystickID
+	Ball  uint8
+	_     uint8 // padding
+	_     uint8 // padding
+	_     uint8 // padding
+	XRel  int16
+	YRel  int16
 }
 type cJoyBallEvent C.SDL_JoyBallEvent
 
 // JoyHatEvent (https://wiki.libsdl.org/SDL_JoyHatEvent)
 type JoyHatEvent struct {
-	Type      uint32
-	Timestamp uint32
-	Which     JoystickID
-	Hat       uint8
-	Value     uint8
-	_         uint8 // padding
-	_         uint8 // padding
+	CommonEvent
+	Which JoystickID
+	Hat   uint8
+	Value uint8
+	_     uint8 // padding
+	_     uint8 // padding
 }
 type cJoyHatEvent C.SDL_JoyHatEvent
 
 // JoyButtonEvent (https://wiki.libsdl.org/SDL_JoyButtonEvent)
 type JoyButtonEvent struct {
-	Type      uint32
-	Timestamp uint32
-	Which     JoystickID
-	Button    uint8
-	State     uint8
-	_         uint8 // padding
-	_         uint8 // padding
+	CommonEvent
+	Which  JoystickID
+	Button uint8
+	State  uint8
+	_      uint8 // padding
+	_      uint8 // padding
 }
 type cJoyButtonEvent C.SDL_JoyButtonEvent
 
 type JoyDeviceEvent struct {
-	Type      uint32
-	Timestamp uint32
-	Which     JoystickID
+	CommonEvent
+	Which JoystickID
 }
 
 type ControllerAxisEvent struct {
-	Type      uint32
-	Timestamp uint32
-	Which     JoystickID
-	Axis      uint8
-	_         uint8 // padding
-	_         uint8 // padding
-	_         uint8
-	Value     int16
-	_         uint16 // padding
+	CommonEvent
+	Which JoystickID
+	Axis  uint8
+	_     uint8 // padding
+	_     uint8 // padding
+	_     uint8
+	Value int16
+	_     uint16 // padding
 }
 type cControllerAxisEvent C.SDL_ControllerAxisEvent
 
 type ControllerButtonEvent struct {
-	Type      uint32
-	Timestamp uint32
-	Which     JoystickID
-	Button    uint8
-	State     uint8
-	_         uint8 // padding
-	_         uint8 // padding
+	CommonEvent
+	Which  JoystickID
+	Button uint8
+	State  uint8
+	_      uint8 // padding
+	_      uint8 // padding
 }
 type cControllerButtonEvent C.SDL_ControllerButtonEvent
 
 type ControllerDeviceEvent struct {
-	Type      uint32
-	Timestamp uint32
-	Which     JoystickID
+	CommonEvent
+	Which JoystickID
 }
 type cControllerDeviceEvent C.SDL_ControllerDeviceEvent
 
 // TouchFingerEvent (https://wiki.libsdl.org/SDL_TouchFingerEvent)
 type TouchFingerEvent struct {
-	Type      uint32
-	Timestamp uint32
-	TouchID   TouchID
-	FingerID  FingerID
-	X         float32
-	Y         float32
-	DX        float32
-	DY        float32
-	Pressure  float32
+	CommonEvent
+	TouchID  TouchID
+	FingerID FingerID
+	X        float32
+	Y        float32
+	DX       float32
+	DY       float32
+	Pressure float32
 }
 type cTouchFingerEvent C.SDL_TouchFingerEvent
 
 // MultiGestureEvent (https://wiki.libsdl.org/SDL_MultiGestureEvent)
 type MultiGestureEvent struct {
-	Type       uint32
-	Timestamp  uint32
+	CommonEvent
 	TouchId    TouchID
 	DTheta     float32
 	DDist      float32
@@ -327,8 +329,7 @@ type cMultiGestureEvent C.SDL_MultiGestureEvent
 
 // DollarGestureEvent (https://wiki.libsdl.org/SDL_DollarGestureEvent)
 type DollarGestureEvent struct {
-	Type       uint32
-	Timestamp  uint32
+	CommonEvent
 	TouchID    TouchID
 	GestureID  GestureID
 	NumFingers uint32
@@ -340,49 +341,42 @@ type cDollarGestureEvent C.SDL_DollarGestureEvent
 
 // DropEvent (https://wiki.libsdl.org/SDL_DropEvent)
 type DropEvent struct {
-	Type      uint32
-	Timestamp uint32
-	file      unsafe.Pointer
+	CommonEvent
+	file unsafe.Pointer
 }
 type cDropEvent C.SDL_DropEvent
 
 type RenderEvent struct {
-	Type      uint32
-	Timestamp uint32
+	CommonEvent
 }
 
 // QuitEvent (https://wiki.libsdl.org/SDL_QuitEvent)
 type QuitEvent struct {
-	Type      uint32
-	Timestamp uint32
+	CommonEvent
 }
 
 type OSEvent struct {
-	Type      uint32
-	Timestamp uint32
+	CommonEvent
 }
 
 type ClipboardEvent struct {
-	Type      uint32
-	Timestamp uint32
+	CommonEvent
 }
 
 // UserEvent (https://wiki.libsdl.org/SDL_UserEvent)
 type UserEvent struct {
-	Type      uint32
-	Timestamp uint32
-	WindowID  uint32
-	Code      int32
-	Data1     unsafe.Pointer
-	Data2     unsafe.Pointer
+	CommonEvent
+	WindowID uint32
+	Code     int32
+	Data1    unsafe.Pointer
+	Data2    unsafe.Pointer
 }
 type cUserEvent C.SDL_UserEvent
 
 // SysWMEvent (https://wiki.libsdl.org/SDL_SysWMEvent)
 type SysWMEvent struct {
-	Type      uint32
-	Timestamp uint32
-	msg       unsafe.Pointer
+	CommonEvent
+	msg unsafe.Pointer
 }
 type cSysWMEvent C.SDL_SysWMEvent
 
